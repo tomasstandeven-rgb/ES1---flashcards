@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maths Flashcards</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+[hidden]{display:none!important}
+html{color-scheme:light}
+img{max-width:100%}
+body{margin:0}
+/* Layout: a single index card on a desk, controls underneath; one screen, centred column */
+:root{
+  --desk:#e3e8ee; --desk-2:#d5dce5;
+  --paper:#fffdf7; --ink:#1c2330; --muted:#5b6676;
+  --rule:#a9cbe8; --margin:#e0524a;
+  --ex:#d63a2f; --blue:#3b6fd8;
+  --knew:#2b8a57; --knew-ink:#fff;
+  --nope:#c96a14; --nope-ink:#fff;
+  --chip:#ffffff; --chip-on:#1c2330; --chip-on-ink:#fff;
+  --shadow:0 1px 2px rgba(28,35,48,.08),0 10px 28px rgba(28,35,48,.14);
+  --plus:#3aa856; --minus:#e2382f;
+  --f-ui:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-math:"STIX Two Text","Cambria Math",Cambria,"Times New Roman",serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#131921; --desk-2:#1a222d;
+  --paper:#1f2834; --ink:#e9eef4; --muted:#9aa6b6;
+  --rule:#2f4a66; --margin:#ff6b61;
+  --ex:#ff776d; --blue:#7fa6ff;
+  --knew:#35a56a; --nope:#e0862f;
+  --chip:#1f2834; --chip-on:#e9eef4; --chip-on-ink:#131921;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.45);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#131921; --desk-2:#1a222d;
+  --paper:#1f2834; --ink:#e9eef4; --muted:#9aa6b6;
+  --rule:#2f4a66; --margin:#ff6b61;
+  --ex:#ff776d; --blue:#7fa6ff;
+  --knew:#35a56a; --nope:#e0862f;
+  --chip:#1f2834; --chip-on:#e9eef4; --chip-on-ink:#131921;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.45);
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--desk);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px;min-height:100%}
+.wrap{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em;margin:0}
+.sub{color:var(--muted);font-size:.95rem;margin:0}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+button{font:inherit;cursor:pointer}
+button:focus-visible,.card:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+
+/* start screen */
+.panel{background:var(--paper);border-radius:14px;box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:16px}
+.panel h2{margin:0;font-size:1.25rem;text-wrap:balance}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--rule);background:var(--chip);color:var(--ink);border-radius:999px;padding:7px 14px;font-size:.92rem;display:flex;gap:6px;align-items:center}
+.chip .n{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.82rem}
+.chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-ink);border-color:var(--chip-on)}
+.chip[aria-pressed="true"] .n{color:inherit;opacity:.7}
+.go{background:var(--ink);color:var(--paper);border:0;border-radius:12px;padding:14px 20px;font-weight:700;font-size:1.05rem}
+.go:disabled{opacity:.4;cursor:not-allowed}
+.help{color:var(--muted);font-size:.88rem;margin:0}
+kbd{font-family:var(--f-ui);font-size:.8rem;border:1px solid var(--rule);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--desk-2)}
+
+/* progress */
+.prog{display:flex;flex-direction:column;gap:6px}
+.prog-row{display:flex;justify-content:space-between;font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:10px;border-radius:99px;background:var(--desk-2);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--knew);border-radius:99px;transition:width .35s ease}
+
+/* card */
+.stage{perspective:1400px}
+.card{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;cursor:pointer;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.3,.7,.3,1);border-radius:14px}
+.card.flipped{transform:rotateY(180deg)}
+.card.instant{transition:none}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;background:var(--paper);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+.face.back{transform:rotateY(180deg)}
+/* index-card ruling: red header line, faint blue lines */
+.face::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(var(--margin),var(--margin)) 0 46px/100% 2px no-repeat,
+             repeating-linear-gradient(to bottom,transparent 0,transparent 33px,var(--rule) 33px,var(--rule) 34px) 0 48px/100% calc(100% - 48px) no-repeat;opacity:.55}
+.tag{position:relative;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:.75rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.body{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5em;text-align:center;padding:10px 20px 18px;font-size:clamp(1.1rem,4.4vw,1.65rem);line-height:1.3;overflow:auto}
+.body .big{font-size:1.25em;font-weight:600}
+.body .small{font-size:.72em}
+.hint{position:absolute;bottom:10px;right:16px;font-size:.75rem;color:var(--muted)}
+
+/* maths */
+.m{font-family:var(--f-math);font-size:1.15em;white-space:nowrap}
+.m i{font-style:italic}
+.m sup{font-size:.62em;vertical-align:.75em;line-height:0}
+.ex{color:var(--ex)}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.05;margin:0 .12em}
+.fr>span:first-child{border-bottom:.07em solid currentColor;padding:0 .15em .04em}
+.fr>span:last-child{padding:.04em .15em 0}
+.mixed{display:inline-flex;align-items:center}
+.ring{display:inline-block;border:2px solid var(--ex);border-radius:50%;padding:0 .12em;line-height:1.1}
+.hl{background:#ffd84d;color:#1c2330;border-radius:4px;padding:0 .12em}
+.ab{display:grid;grid-template-columns:auto auto;gap:.2em .5em;align-items:center;justify-content:center}
+.ab b{font-weight:600}
+.steps{text-align:left;margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:.15em}
+.rhyme{text-align:left;display:flex;flex-direction:column;gap:.1em;font-size:.9em}
+.eqgrid{display:grid;grid-template-columns:auto auto auto;column-gap:.35em;row-gap:.2em;align-items:center;justify-content:center}
+.eqgrid>span:nth-child(3n+1){text-align:right}
+.eqgrid>span:nth-child(3n){text-align:left}
+.signs{display:grid;grid-template-columns:repeat(5,auto);gap:.35em .5em;align-items:center;justify-content:center;font-weight:800}
+.dot{width:1.5em;height:1.5em;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:.9em;line-height:1}
+.dot.p{background:var(--plus)} .dot.n{background:var(--minus)}
+.convsvg{width:100%;max-width:460px;height:auto;color:var(--ink);overflow:visible}
+.convsvg text{text-anchor:middle;font-family:var(--f-ui)}
+.convsvg .unit{fill:var(--ex);font-size:17px;font-weight:600}
+.convsvg .op{fill:var(--ink);font-size:14px;font-weight:800;stroke:var(--paper);stroke-width:7px;paint-order:stroke;stroke-linejoin:round;dominant-baseline:middle}
+.sf{position:relative;display:inline-block}
+
+/* answer buttons */
+.answer{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.answer button{border:0;border-radius:12px;padding:16px 10px;font-weight:700;font-size:1.05rem;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .1s}
+.answer button:active{transform:scale(.97)}
+.b-nope{background:var(--nope);color:var(--nope-ink)}
+.b-knew{background:var(--knew);color:var(--knew-ink)}
+.flipbtn{border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:12px;padding:15px;font-weight:700;font-size:1.05rem;width:100%}
+.footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;padding:4px 0;font-size:.9rem}
+
+/* result */
+.big-num{font-size:3rem;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.stats{display:flex;gap:24px;flex-wrap:wrap}
+.stats div{display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:reduce){.card,.bar i{transition:none}}
+@media (max-width:420px){.body{padding:8px 14px 16px}.tag{padding:0 14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Maths Flashcards</h1>
+    <p class="sub">ESO 1 · 42 cards</p>
+  </header>
+
+  <!-- START -->
+  <section id="start" class="panel">
+    <div>
+      <div class="eyebrow">Choose topics</div>
+      <h2>What do you want to practise?</h2>
+    </div>
+    <div class="chips" id="chips"></div>
+    <button class="go" id="startBtn">Start</button>
+    <p class="help">Tap the card to see the back. Then say if you knew it. Cards you didn't know keep coming back until you get every one right.<br>Keyboard: <kbd>Space</kbd> flip · <kbd>→</kbd> I knew it · <kbd>←</kbd> Not yet</p>
+  </section>
+
+  <!-- PLAY -->
+  <section id="play" hidden>
+    <div class="wrap" style="gap:16px">
+      <div class="prog">
+        <div class="prog-row"><span id="roundLbl">Round 1</span><span id="knownLbl">0 of 0 known</span></div>
+        <div class="bar"><i id="barFill"></i></div>
+      </div>
+      <div class="stage">
+        <div class="card" id="card" tabindex="0" role="button" aria-label="Flashcard. Press to flip.">
+          <div class="face front"><div class="tag"><span id="tagF"></span><span id="posF"></span></div><div class="body" id="front"></div><span class="hint">Tap to flip</span></div>
+          <div class="face back"><div class="tag"><span>Answer</span><span id="posB"></span></div><div class="body" id="back"></div></div>
+        </div>
+      </div>
+      <div id="flipRow"><button class="flipbtn" id="flipBtn">Show answer</button></div>
+      <div class="answer" id="ansRow" hidden>
+        <button class="b-nope" id="nopeBtn">✗ Not yet</button>
+        <button class="b-knew" id="knewBtn">✓ I knew it</button>
+      </div>
+      <div class="footer"><span class="help">Keep going until you know them all.</span><span class="help" id="leftLbl"></span></div>
+    </div>
+  </section>
+
+  <!-- ROUND END -->
+  <section id="roundEnd" class="panel" hidden>
+    <div class="eyebrow" id="reEyebrow">Round 1 done</div>
+    <div class="stats">
+      <div><span class="big-num" id="reKnew" style="color:var(--knew)">0</span><span class="help">knew this round</span></div>
+      <div><span class="big-num" id="reLeft" style="color:var(--nope)">0</span><span class="help">still to learn</span></div>
+    </div>
+    <p class="help" id="reMsg"></p>
+    <button class="go" id="againBtn">Go again</button>
+  </section>
+
+  <!-- DONE -->
+  <section id="done" class="panel" hidden>
+    <div class="eyebrow">All done</div>
+    <h2 id="doneTitle">You know all the cards!</h2>
+    <p class="help" id="doneMsg"></p>
+    <button class="go" id="restartBtn">Start again</button>
+    <button class="link" id="topicsBtn" style="align-self:flex-start">Choose different topics</button>
+  </section>
+</div>
+
+<script>
+const fr=(a,b)=>`<span class="fr"><span>${a}</span><span>${b}</span></span>`;
+const m=s=>`<span class="m">${s}</span>`;
+const p=(b,e)=>`${b}<sup>${e}</sup>`;
+const dot=s=>`<span class="dot ${s==='+'?'p':'n'}">${s==='+'?'+':'−'}</span>`;
+let convId=0;
+const conv=(units,ops)=>{
+  const W=400,H=136,n=units.length,step=W/n,xs=units.map((_,i)=>step*(i+.5)),id='ah'+(convId++),off=Math.min(26,step*.22);
+  let s=`<svg class="convsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${units.join(', ')}: divide going right, multiply going left"><defs><marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>`;
+  for(let i=0;i<n-1;i++){
+    const a=xs[i]+off,b=xs[i+1]-off,mid=(xs[i]+xs[i+1])/2;
+    s+=`<path d="M${a} 54 Q${mid} 4 ${b} 54" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#${id})"/>`;
+    s+=`<text class="op" x="${mid}" y="34">÷ ${ops[i]}</text>`;
+    s+=`<path d="M${b} 84 Q${mid} 134 ${a} 84" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#${id})"/>`;
+    s+=`<text class="op" x="${mid}" y="114">× ${ops[i]}</text>`;
+  }
+  units.forEach((u,i)=>{s+=`<text class="unit" x="${xs[i]}" y="75">${u}</text>`});
+  return s+'</svg>';
+};
+
+const CARDS=[
+ {t:"Number",f:"What is a multiple?",b:`<span class="big">Answers when we multiply</span><span class="small ex">e.g. multiples of 3: 3, 6, 9, 12…</span>`},
+ {t:"Number",f:"What are factors?",b:`<span class="big">Whole numbers that divide exactly!</span>`},
+ {t:"Number",f:"What are prime numbers?",b:`<span class="big">Numbers with exactly two factors, one and itself</span>`},
+ {t:"Number",f:"What are the first five prime numbers?",b:`<span class="big m">2, 3, 5, 7, 11</span>`},
+ {t:"Number",f:"What are the three primes after 11?",b:`<span class="big m">13, 17, 19</span>`},
+ {t:"Number",f:"When multiplying or dividing integers, how do you determine the sign?",b:`<div class="signs">${dot('+')}<span>×</span>${dot('+')}<span>=</span>${dot('+')}${dot('+')}<span>×</span>${dot('-')}<span>=</span>${dot('-')}${dot('-')}<span>×</span>${dot('+')}<span>=</span>${dot('-')}${dot('-')}<span>×</span>${dot('-')}<span>=</span>${dot('+')}</div>`},
+ {t:"Indices",f:`What is the name of this part?<span class="m" style="font-size:2em"><span class="ring">5</span><sup>2</sup></span>`,b:`<span class="big">The Base</span>`},
+ {t:"Indices",f:`What is the name of this part?<span class="m" style="font-size:2em">5<sup><span class="ring">2</span></sup></span>`,b:`<span class="big">The Index</span>`},
+ {t:"Indices",f:`Write the following as a product:<div class="eqgrid"><span class="m">${p(5,4)}</span><span class="m">=</span><span></span><span class="m">(−2)<sup>3</sup></span><span class="m">=</span><span></span></div>`,b:`<div class="eqgrid"><span class="m">${p(5,4)}</span><span class="m">=</span><span class="m">5 × 5 × 5 × 5</span><span class="m">(−2)<sup>3</sup></span><span class="m">=</span><span class="m">(−2) × (−2) × (−2)</span></div>`},
+ {t:"Indices",f:`Which is correct, A or B?<div class="ab"><b>A:</b><span class="m ex">${p(2,3)} × ${p(2,4)} = ${p(2,7)}</span><b>B:</b><span class="m ex">${p(2,3)} + ${p(2,4)} = ${p(2,7)}</span></div>`,b:`<span class="big">A is correct.</span><span>Add indices when multiplying, not adding.</span>`},
+ {t:"Indices",f:`Which is correct, A or B?<div class="ab"><b>A:</b><span class="m ex">${p(5,6)} − ${p(5,2)} = ${p(5,4)}</span><b>B:</b><span class="m ex">${p(5,6)} ÷ ${p(5,2)} = ${p(5,4)}</span></div>`,b:`<span class="big">B is correct.</span><span>Subtract indices when dividing, not subtracting.</span>`},
+ {t:"Indices",f:`Which is correct, A or B?<div class="ab"><b>A:</b><span class="m ex">${p(3,2)} × ${p(3,4)} = ${p(3,6)}</span><b>B:</b><span class="m ex">${p(3,2)} × ${p(5,4)} = ${p(15,6)}</span></div>`,b:`<span class="big">A is correct.</span><span>Add indices only when the bases are the same.</span>`},
+ {t:"Indices",f:`<span class="m" style="font-size:1.6em">${p('<i>a</i>','<i>n</i>')} × ${p('<i>a</i>','<i>m</i>')} =</span>`,b:`<span class="m" style="font-size:1.4em">${p('<i>a</i>','<i>n</i>')} × ${p('<i>a</i>','<i>m</i>')} = ${p('<i>a</i>','<i>n</i>+<i>m</i>')}</span><span class="m ex">e.g. ${p(5,2)} × ${p(5,6)} = ${p(5,8)}</span>`},
+ {t:"Indices",f:`<span class="m" style="font-size:1.6em">${p('<i>a</i>','<i>n</i>')} ÷ ${p('<i>a</i>','<i>m</i>')} =</span>`,b:`<span class="m" style="font-size:1.4em">${p('<i>a</i>','<i>n</i>')} ÷ ${p('<i>a</i>','<i>m</i>')} = ${p('<i>a</i>','<i>n</i>−<i>m</i>')}</span><span class="m ex">e.g. ${p(5,8)} ÷ ${p(5,6)} = ${p(5,2)}</span>`},
+ {t:"Indices",f:`<span class="m" style="font-size:1.6em">(${p('<i>a</i>','<i>n</i>')})<sup><i>m</i></sup> =</span>`,b:`<span class="m" style="font-size:1.4em">(${p('<i>a</i>','<i>n</i>')})<sup><i>m</i></sup> = ${p('<i>a</i>','<i>nm</i>')}</span><span class="m ex">e.g. (${p(5,3)})<sup>4</sup> = ${p(5,12)}</span>`},
+ {t:"Indices",f:`<span class="m" style="font-size:2em">${p('<i>b</i>',0)} =</span>`,b:`<span class="m" style="font-size:1.5em">${p('<i>b</i>',0)} = 1</span><span class="m ex">e.g. ${p(5,0)} = 1</span><span class="m ex">e.g. ${p(8,0)} = 1</span>`},
+ {t:"Decimals",f:"What happens when we multiply by 10, 100, 1000…?",b:`<span class="small">Move the decimal point to the</span><span class="big" style="text-decoration:underline">RIGHT</span><span class="small">Number of places = number of zeros<br>× 10 → 1 place · × 100 → 2 places · × 1000 → 3 places</span><span class="ex">e.g. 3.45 × 100 = 345</span>`},
+ {t:"Decimals",f:"What happens when we divide by 10, 100, 1000…?",b:`<span class="small">Move the decimal point to the</span><span class="big" style="text-decoration:underline">LEFT</span><span class="small">Number of places = number of zeros<br>÷ 10 → 1 place · ÷ 100 → 2 places · ÷ 1000 → 3 places</span><span class="ex">e.g. 45 ÷ 100 = 0.45</span>`},
+ {t:"Decimals",f:"Dividing by 0.1 is the same as…",b:`<span class="big">Multiplying by 10</span><span class="ex">e.g. 6 ÷ 0.1 = 6 × 10 = 60</span>`},
+ {t:"Decimals",f:"Dividing by 0.01 is the same as…",b:`<span class="big">Multiplying by 100</span><span class="ex">e.g. 6 ÷ 0.01 = 6 × 100 = 600</span>`},
+ {t:"Decimals",f:"Multiplying by 0.1 is the same as…",b:`<span class="big">Dividing by 10</span><span class="ex">e.g. 6 × 0.1 = 6 ÷ 10 = 0.6</span>`},
+ {t:"Decimals",f:"Multiplying by 0.01 is the same as…",b:`<span class="big">Dividing by 100</span><span class="ex">e.g. 6 × 0.01 = 6 ÷ 100 = 0.06</span>`},
+ {t:"Decimals",f:`How do we calculate<span class="m ex">0.3 × 0.04?</span>`,b:`<span class="m ex">3 × 4 = 12</span><span>3 decimal places altogether.</span><span>Answer: <span class="m ex">0.012</span></span>`},
+ {t:"Decimals",f:`How do we make<span class="m ex">4.8 ÷ 0.6</span>easier?`,b:`<span class="m ex">48 ÷ 6 = 8</span><span>Multiply both numbers by 10.</span>`},
+ {t:"Rounding",f:"What are the rounding rules?",b:`<div class="rhyme"><span>Find the position.</span><span>Look right next door.</span><span>Four or less, just ignore.</span><span>Five or more, add one more.</span></div>`},
+ {t:"Rounding",f:"The first significant figure is…",b:`<span>The first non-zero digit.</span><span class="ex big">e.g. 0.00<span class="ring" style="border-color:var(--blue)">4</span>08</span><span class="small" style="color:var(--blue)">↑ first significant figure</span>`},
+ {t:"Rounding",f:"Can zero be a significant figure?",b:`<span>Yes, if it is between two non-zero digits.</span><span class="ex big">e.g. 0.3<span class="ring" style="border-color:var(--blue)">0</span>4</span><span class="small" style="color:var(--blue)">↑ second significant figure</span>`},
+ {t:"Units",f:"Converting units of length",b:conv(["mm","cm","m","km"],[10,100,1000])+`<span class="small" style="color:var(--muted)">millimetres · centimetres · metres · kilometres</span>`},
+ {t:"Units",f:"Converting units of mass",b:conv(["grams","kilograms","tonnes"],[1000,1000])},
+ {t:"Units",f:"Converting units of capacity",b:conv(["millilitres","litres"],[1000])},
+ {t:"Fractions",f:`What is the highlighted part called?<span class="m ex" style="font-size:2em">${fr('<span class="hl">3</span>','5')}</span>`,b:`<span class="big">Numerator</span><span>The top number.</span>`},
+ {t:"Fractions",f:`What is the highlighted part called?<span class="m ex" style="font-size:2em">${fr('3','<span class="hl">5</span>')}</span>`,b:`<span class="big">Denominator</span><span>The bottom number.</span>`},
+ {t:"Fractions",f:"How do we find equivalent fractions?",b:`<span>Multiply or divide the top and bottom by the same non-zero number.</span><span class="m ex" style="font-size:1.3em">${fr(2,3)} = ${fr(4,6)}</span>`},
+ {t:"Fractions",f:"How do we simplify a fraction fully?",b:`<span>Divide the top and bottom by the HCF.</span><span class="m ex" style="font-size:1.3em">${fr(12,18)} = ${fr(2,3)}</span>`},
+ {t:"Fractions",f:`Is <span class="m ex" style="font-size:1.3em">${fr(1,5)} + ${fr(2,5)} = ${fr(3,10)}</span> correct?`,b:`<span>No! Never add the denominators.</span><span class="m ex" style="font-size:1.3em">${fr(1,5)} + ${fr(2,5)} = ${fr(3,5)}</span>`},
+ {t:"Fractions",f:"Before adding fractions, what do we need?",b:`<span class="big">The same denominator.</span>`},
+ {t:"Fractions",f:"How do we add fractions with different denominators?",b:`<ol class="steps"><li>Find a common denominator.</li><li>Write equivalent fractions.</li><li>Add the numerators.</li></ol>`},
+ {t:"Fractions",f:"What is the first step when adding mixed-number fractions using the improper-fraction method?",b:`<span>Convert to improper fractions.</span><span class="m ex" style="font-size:1.3em"><span class="mixed">1${fr(1,2)}</span> = ${fr(3,2)}</span>`},
+ {t:"Fractions",f:"When subtracting fractions with the same denominator, what do we subtract?",b:`<span>The numerators only.</span><span class="m ex" style="font-size:1.3em">${fr(5,7)} − ${fr(2,7)} = ${fr(3,7)}</span>`},
+ {t:"Fractions",f:"How do we multiply fractions?",b:`<span>Top × top, bottom × bottom.</span><span class="m ex" style="font-size:1.3em">${fr(2,3)} × ${fr(4,5)} = ${fr(8,15)}</span>`},
+ {t:"Fractions",f:"How do we divide fractions?",b:`<span class="big">Keep, Change, Flip.</span><span class="small">Keep the first fraction.<br>Change ÷ to ×.<br>Flip the second fraction.</span>`},
+ {t:"Fractions",f:"Which fraction do we flip when dividing?",b:`<span class="big">The second fraction.</span>`},
+];
+const TOPICS=["Number","Indices","Decimals","Rounding","Units","Fractions"];
+
+const $=id=>document.getElementById(id);
+let selected=new Set(TOPICS);
+try{const s=JSON.parse(localStorage.getItem('fc-topics')||'null');if(Array.isArray(s)&&s.length)selected=new Set(s.filter(t=>TOPICS.includes(t)))}catch(e){}
+
+function renderChips(){
+  $('chips').innerHTML=TOPICS.map(t=>`<button class="chip" id="chip-${t}" aria-pressed="${selected.has(t)}" data-t="${t}">${t} <span class="n">${CARDS.filter(c=>c.t===t).length}</span></button>`).join('');
+  const n=CARDS.filter(c=>selected.has(c.t)).length;
+  $('startBtn').textContent=n?`Start · ${n} cards`:'Pick at least one topic';
+  $('startBtn').disabled=!n;
+}
+$('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;const t=b.dataset.t;selected.has(t)?selected.delete(t):selected.add(t);try{localStorage.setItem('fc-topics',JSON.stringify([...selected]))}catch(e){}renderChips()});
+
+let pool=[],queue=[],idx=0,missed=[],known=0,round=1,roundKnew=0,flipped=false,busy=false;
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function show(id){['start','play','roundEnd','done'].forEach(s=>$(s).hidden=s!==id)}
+
+function startAll(){
+  pool=CARDS.filter(c=>selected.has(c.t));
+  queue=shuffle(pool);idx=0;missed=[];known=0;round=1;roundKnew=0;
+  show('play');renderCard();
+}
+function renderCard(){
+  const c=queue[idx],card=$('card');
+  card.classList.add('instant');card.classList.remove('flipped');flipped=false;
+  void card.offsetWidth;card.classList.remove('instant');
+  $('front').innerHTML=c.f;$('back').innerHTML=c.b;
+  $('tagF').textContent=c.t;
+  const pos=`${idx+1} / ${queue.length}`;$('posF').textContent=pos;$('posB').textContent=pos;
+  $('flipRow').hidden=false;$('ansRow').hidden=true;
+  $('roundLbl').textContent=`Round ${round}`;
+  $('knownLbl').textContent=`${known} of ${pool.length} known`;
+  $('barFill').style.width=(known/pool.length*100)+'%';
+  $('leftLbl').textContent=`${queue.length-idx} left this round`;
+}
+function flip(){
+  if($('play').hidden)return;
+  flipped=!flipped;$('card').classList.toggle('flipped',flipped);
+  if(flipped){$('flipRow').hidden=true;$('ansRow').hidden=false}
+}
+function answer(knew){
+  if(!flipped||busy)return;
+  if(knew){known++;roundKnew++}else missed.push(queue[idx]);
+  idx++;
+  if(idx<queue.length){renderCard();return}
+  $('barFill').style.width=(known/pool.length*100)+'%';
+  if(!missed.length){
+    $('doneTitle').textContent='You know all the cards!';
+    $('doneMsg').textContent=round===1?`All ${pool.length} cards right first time. Brilliant.`:`It took ${round} rounds to learn all ${pool.length} cards.`;
+    show('done');return;
+  }
+  queue=shuffle(missed);missed=[];idx=0;round++;roundKnew=0;renderCard();
+}
+$('againBtn').onclick=()=>{queue=shuffle(missed);missed=[];idx=0;round++;roundKnew=0;show('play');renderCard()};
+$('card').onclick=flip;
+$('flipBtn').onclick=flip;
+$('knewBtn').onclick=()=>answer(true);
+$('nopeBtn').onclick=()=>answer(false);
+$('startBtn').onclick=startAll;
+$('restartBtn').onclick=startAll;
+$('topicsBtn').onclick=()=>{renderChips();show('start')};
+document.addEventListener('keydown',e=>{
+  if($('play').hidden){if(e.key==='Enter'&&!$('roundEnd').hidden){e.preventDefault();$('againBtn').click()}return}
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();flip()}
+  else if(e.key==='ArrowRight')answer(true);
+  else if(e.key==='ArrowLeft')answer(false);
+});
+renderChips();
+</script>
+</body>
+</html>
